@@ -1,6 +1,10 @@
 package com.example.mora;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -16,6 +20,14 @@ public class MainActivity extends Activity implements OnClickListener {
 	private ImageButton imageButton2 = null;
 	private ImageButton imageButton3 = null;
 	private ImageButton imageButton4 = null;
+
+	private static final Map<String, String> USER_SELECT_MAP = new HashMap<String, String>();
+	private static final Map<String, String> COMPARE_MAP = new HashMap<String, String>();
+	{
+		COMPARE_MAP.put("1", "3");
+		COMPARE_MAP.put("2", "1");
+		COMPARE_MAP.put("3", "2");
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,60 +58,92 @@ public class MainActivity extends Activity implements OnClickListener {
 		return true;
 	}
 
-	public void sendMessage(View view) {
-		// Intent intent = new Intent(this, MainActivity.class);
-		// EditText editText = (EditText) findViewById(R.id.editText1);
-		// String message = editText.getText().toString();
-		// System.out.println("input message:" + message);
-		// intent.putExtra("xxxx", message);
-		//
-		// TextView textView = (TextView) findViewById(R.id.textView2);
-		// textView.setText("You send message:" + message);
-	}
-
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.imageButton1: {
-			setToggleButtonState(true);
+			setToggleButtonState(true, "1");
 			break;
 		}
 		case R.id.imageButton2: {
-			setToggleButtonState(true);
+			setToggleButtonState(true, "2");
 			break;
 		}
 		case R.id.imageButton3: {
-			setToggleButtonState(true);
+			setToggleButtonState(true, "3");
 			break;
 		}
 		case R.id.imageButton4: {
-			setToggleButtonState(false);
+			setToggleButtonState(false, "0");
 			break;
 		}
 		}
 
 	}
 
-	private void setToggleButtonState(boolean isChecked) {
+	// 设置开关按钮状态
+	private void setToggleButtonState(boolean isChecked, String select) {
 		if (isChecked) {
 			if (toggleButton1.isChecked()) {
 				toggleButton2.setChecked(isChecked);
-
+				USER_SELECT_MAP.put("B", select);
 				setImageButtonState(false);
 			} else {
+				USER_SELECT_MAP.put("A", select);
 				toggleButton1.setChecked(isChecked);
 			}
 		} else {
 			toggleButton1.setChecked(isChecked);
 			toggleButton2.setChecked(isChecked);
 			setImageButtonState(true);
+			USER_SELECT_MAP.clear();
 		}
 	}
 
+	// 设置用户按钮使用状态
 	private void setImageButtonState(boolean isEnable) {
 		imageButton1.setEnabled(isEnable);
 		imageButton2.setEnabled(isEnable);
 		imageButton3.setEnabled(isEnable);
+
+		// 判断到底哪个用户赢了？
+		if (isEnable) {
+			String aSelect = USER_SELECT_MAP.get("A");
+			String bSelect = USER_SELECT_MAP.get("B");
+			String retStr = "";
+			if (aSelect.equals(bSelect)) {
+				// 平局
+				retStr = "Is Draw";
+			} else {
+				String pre = COMPARE_MAP.get(aSelect);
+				if (pre.equals(bSelect)) {
+					// A赢了
+					retStr = "Andy Win!";
+				} else {
+					// A输了
+					retStr = "Bell Win!";
+				}
+			}
+
+			new AlertDialog.Builder(this)
+					.setTitle("Victories")
+					.setMessage(
+							retStr + "\nAndy=" + translateSelectStr(aSelect)
+									+ ",Bell=" + translateSelectStr(bSelect))
+					.setPositiveButton("ok", null).show();
+		}
+
 	}
 
+	private String translateSelectStr(String select) {
+		if ("1".equals(select)) {
+			return "剪刀";
+		} else if ("2".equals(select)) {
+			return "石头";
+		} else if ("3".equals(select)) {
+			return "白布";
+		} else {
+			return "非法值";
+		}
+	}
 }
