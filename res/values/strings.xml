@@ -7,5 +7,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="togglebutton">ToggleButton</string>
     <string name="textview">TextView</string>
+    <string name="xxxx">xxxx</string>
 
 </resources>
