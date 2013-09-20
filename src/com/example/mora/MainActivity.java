@@ -13,12 +13,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ToggleButton;
 
-@SuppressLint("NewApi")
+@SuppressLint({ "NewApi", "HandlerLeak" })
 public class MainActivity extends Activity implements OnClickListener {
 
 	private ToggleButton toggleButton1 = null;
@@ -28,8 +27,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	private ImageButton imageButton3 = null;
 	private ImageButton imageButton4 = null;
 	private ImageView imageView2 = null;
-
-	Thread myRefreshThread = null;
 
 	private static final Map<String, String> USER_SELECT_MAP = new HashMap<String, String>();
 	private static final Map<String, String> COMPARE_MAP = new HashMap<String, String>();
@@ -41,12 +38,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 
-		Log.i("", "11111111111111111");
-		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		
-		Log.i("", "22222222222222222222222222222");
+		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		toggleButton1 = (ToggleButton) this.findViewById(R.id.toggleButton1);
@@ -66,34 +59,54 @@ public class MainActivity extends Activity implements OnClickListener {
 		imageButton4.setOnClickListener(this);
 
 		imageView2 = (ImageView) this.findViewById(R.id.imageView2);
-
-		Log.i("", "3333333333333333333333333");
-		new Thread(new myThread()).start();
-		Log.i("", "44444444444444444444444");
+		imageView2.setTop(-300);
 
 	}
 
 	class myThread implements Runnable {
+
 		public void run() {
-			while (!Thread.currentThread().isInterrupted()) {
+			int i = imageView2.getHeight();
+			while (i < 0) {
+				i--;
 				Message message = new Message();
 				message.what = 1;
-				MainActivity.this.myHandler.handleMessage(message);
+				myHandler.sendMessage(message);
 				try {
-					Thread.sleep(100);
+					Thread.sleep(5);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
 			}
+			Message message = new Message();
+			message.what = 2;
+			myHandler.sendMessage(message);
 		}
 	}
 
 	Handler myHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-			case 1:
-				imageView2.invalidate();
+			case 1: {
+				try {
+					imageView2.setTop(imageView2.getTop() + 1);
+					imageView2.invalidate();
+				} catch (Exception e) {
+					Log.e("myHandler", e.getMessage());
+				}
+
 				break;
+			}
+			case 2: {
+				try {
+					imageView2.setTop(0);
+					imageView2.invalidate();
+				} catch (Exception e) {
+					Log.e("myHandler", e.getMessage());
+				}
+
+				break;
+			}
 			}
 			super.handleMessage(msg);
 
@@ -124,33 +137,11 @@ public class MainActivity extends Activity implements OnClickListener {
 			break;
 		}
 		case R.id.imageButton4: {
-
-			// for (int i = 0; i < 200; i++) {
-			// imageView2.setTop(0 - i);
-			// }
-
-			// setToggleButtonState(false, "0");
+			setToggleButtonState(false, "0");
 			break;
 		}
 		}
 
-	}
-
-	class GameThread implements Runnable {
-		private ImageView imageView;
-
-		GameThread(ImageView imageView) {
-			this.imageView = imageView;
-		}
-
-		public void run() {
-			imageView.invalidate();
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		}
 	}
 
 	// 设置开关按钮状态
@@ -160,6 +151,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				toggleButton2.setChecked(isChecked);
 				USER_SELECT_MAP.put("B", select);
 				setImageButtonState(false);
+				new Thread(new myThread()).start();
 			} else {
 				USER_SELECT_MAP.put("A", select);
 				toggleButton1.setChecked(isChecked);
@@ -169,6 +161,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			toggleButton2.setChecked(isChecked);
 			setImageButtonState(true);
 			USER_SELECT_MAP.clear();
+			imageView2.setTop(0 - imageView2.getHeight());
 		}
 	}
 
@@ -221,4 +214,5 @@ public class MainActivity extends Activity implements OnClickListener {
 			return "非法值";
 		}
 	}
+
 }
